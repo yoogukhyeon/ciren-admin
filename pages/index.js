@@ -3,7 +3,7 @@ import BaseLayout from '../components/container/BaseLayout'
 import firebaseApp from '../net/firebaseApp';
 import {Table} from 'antd'
 import { Select } from 'antd';
-import { getFirestore , doc , updateDoc , orderBy,  collection , onSnapshot , query} from "firebase/firestore";
+import { getFirestore , doc , updateDoc , orderBy,  collection , onSnapshot , query } from "firebase/firestore";
 import { Fragment, useEffect, useState } from 'react';
 import { DateTime } from 'luxon';
 
@@ -26,6 +26,14 @@ export default function Home() {
        })
   }, [])
 
+  function sum(array){
+    return array.reduce((acc, num) => {
+     acc += num
+     return acc
+   }, 0)
+ }
+
+
   const columns = [
     {
       title: '이름',
@@ -33,7 +41,7 @@ export default function Home() {
       key: 'name',
     },
     {
-      title: '주문내역',
+      title: '커피주문내역',
       dataIndex: 'items',
       key: 'items',
       render : (text, record) => {
@@ -50,7 +58,7 @@ export default function Home() {
       }
     },
     {
-      title: '합계 금액',
+      title: '커피 합계 금액',
       dataIndex: 'itams',
       key: 'total',
       render : (text , record) => {
@@ -58,6 +66,72 @@ export default function Home() {
             <div>
             합계 : {formatter.format(sum(record.items.map(item => item.count * item.price)))}원
            </div>
+        )
+      }
+    },
+    {
+      title: '음료주문이름',
+      dataIndex: 'drinkings',
+      key: 'drinkings',
+      render : (text , record) => {
+        if(record.drinkings){
+          return <div>
+          <ul>
+              {record.drinkings.map(item => (
+                <Fragment key={item.name}>
+                    <li>{item.name} {formatter.format(item.price)}원 &times; {item.count}</li>
+                </Fragment>
+              ))}
+          </ul>
+        </div>  
+        }else{
+         return <div>
+                  음료주문 없음
+                </div>
+        }
+      }
+    },
+    {
+      title: '음료 합계 금액',
+      dataIndex: 'drinkings',
+      key: 'total',
+      render : (text , record) => {
+        if(record.drinkings){
+          return (
+            <div>
+            합계 : {formatter.format(sum(record.drinkings.map(item => item.count * item.price)))}원
+           </div>
+        )
+        }
+      }
+    },
+    {
+      title: '총 합계',
+      dataIndex: 'total',
+      key: 'total',
+      render : (text , record) => {
+        if(record.drinkings){
+          return (
+            <div>
+            합계 : {formatter.format(sum(record.drinkings.map(item => item.count * item.price)) + sum(record.items.map(item => item.count * item.price)))}원
+           </div>
+        )
+        }else{
+          return (
+            <div>
+            합계 : {formatter.format(sum(record.items.map(item => item.count * item.price)))}원
+           </div>
+        )
+        }
+      }
+    },
+    {
+      title: '결제',
+      dataIndex: 'paymentResult',
+      key: 'paymentResult',
+      render : (text , record) => {
+        return (
+            record.paymentResult ? "카드결제" : "현장 결제"
         )
       }
     },
@@ -88,12 +162,7 @@ export default function Home() {
   ];
 
   
-  function sum(array){
-    return array.reduce((acc, num) => {
-     acc += num
-     return acc
-   }, 0)
- }
+
 
   return (
       <BaseLayout>
